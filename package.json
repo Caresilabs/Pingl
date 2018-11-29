@@ -10,6 +10,9 @@
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.18.3",
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "express-logger": "0.0.3",
+    "request": "^2.88.0",
+    "string-format": "^2.0.0"
   }
 }

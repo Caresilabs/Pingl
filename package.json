@@ -1,0 +1,15 @@
+{
+  "name": "pingl",
+  "version": "1.0.0",
+  "description": "Pingdom - Google Chat Relay",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Simon Bothén",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4"
+  }
+}

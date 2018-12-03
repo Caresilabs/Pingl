@@ -11,7 +11,6 @@ const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express().use(bodyParser.json());
-const logger = require('express-logger');
 const format = require('string-format')
 const request = require('request');
 
@@ -19,8 +18,6 @@ const OK_CODE = 200;
 const UNAUTHORIZED_CODE = 401;
 
 let config = JSON.parse(fs.readFileSync('app.config'));
-
-app.use(logger({path: "logs/applog.txt"}));
 
 var server = app.listen(config.port, () => {
     console.log('[Pingl] is listening!');

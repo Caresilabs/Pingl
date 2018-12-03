@@ -5,9 +5,9 @@ A Pingdom to Google Chat Relay Bot using Webhooks.
 
 1. Set up a "webhook"-bot in your Google Chat room.
 2. Copy app.config.template to app.config
-2a. Modify the values to your liking
-3. Run `npm install`
-4. Run the node app with: `./index.js`.
+3. Modify the values to your liking, and be sure to set a secure token.
+4. Run `npm install`
+5. Run the node app with: `./index.js`.
 
 ## Features
 
@@ -15,7 +15,7 @@ A Pingdom to Google Chat Relay Bot using Webhooks.
 Set the pingdom webhook to `YOURDOMAIN.com/pingl?token=TOKEN`.
 
 ### Echo
-The bot can echo anything you say by doing a post call to `/echo`. The body should be:
+The bot can echo anything you say by doing a post call to `/echo`. The body should be in the following format:
 `{ text: "Hello world!" }`
 
 ### Custom messages
@@ -24,8 +24,9 @@ Custom messages can be set up in app.config.
 
 Supported replacement tokens are:
 
-{name} - My website
-{hostname} - www.example.com
-{type} - HTTP
-{state} - DOWN
+_Token - Example_
+- `{name}` - My website
+- `{hostname}` - www.example.com
+- `{type}` - HTTP
+- `{state}` - DOWN
 

@@ -1,0 +1,28 @@
+{
+
+	"instanceId": "template",
+	"token": "1234",
+
+	"googleChatUrl": "https://",
+
+	"messages": {
+
+		"up" : [
+			"💚 *[{name}]* is up and running! _({type})_"
+		],
+
+		"down" : [
+			"🔴 *[{name}]* just went down! _({type})_\n{hostname}"
+		],
+
+		"botStart" : [
+			"Pingl has started!"
+		],
+
+		"botShutdown" : [
+			"Pingl has stopped!"
+		]
+
+	}
+
+}

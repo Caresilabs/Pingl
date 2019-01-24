@@ -18,37 +18,57 @@ const OK_CODE = 200;
 const UNAUTHORIZED_CODE = 401;
 
 let config = JSON.parse(fs.readFileSync('app.config'));
+let instances = {};
+
+(function init() {
+    for (var i = 0, len = config.instances.length; i < len; i++) {
+        let instance = JSON.parse(fs.readFileSync(config.instances[i]));
+        instances[instance.instanceId] = instance;
+        console.log('[Pingl] installed: ' + instance.instanceId);
+    }
+})();
 
 var server = app.listen(config.port, () => {
     console.log('[Pingl] is listening!');
-    sendToGoogleChat(getRandomArrayItem(config.messages.botStart), null);
+    for (var key in instances) {
+        let instance = instances[key];
+        sendToGoogleChat(instance, getRandomArrayItem(instance.messages.botStart), null);
+    }
 });
 
 app.post('/pingl', (req, res) => {
-
-    let isAuthorized = authorize(req.query.token);
-    if (isAuthorized != true) {
+    let instance = authorize(req.query.instanceId, req.query.token);
+    if (!instance) {
         return res.sendStatus(UNAUTHORIZED_CODE);
     }
 
-    sendPingdomMessage(req.body);
+    sendPingdomMessage(instance, req.body);
 
     return res.sendStatus(OK_CODE);
 });
 
 app.post('/echo', (req, res) => {
-
-    let isAuthorized = authorize(req.query.token);
-    if (!isAuthorized) {
+    let instance = authorize(req.query.instanceId, req.query.token);
+    if (!instance) {
         return res.sendStatus(UNAUTHORIZED_CODE);
     }
 
-    sendToGoogleChat(req.body.text, null);
+    sendToGoogleChat(instance, req.body.text, null);
 
     return res.sendStatus(OK_CODE);
 });
 
-function sendPingdomMessage(pingdomData) {
+app.post('/shutdown', (req, res) => {
+    let instance = authorize(req.query.instanceId, req.query.token);
+    if (!instance) {
+        return res.sendStatus(UNAUTHORIZED_CODE);
+    }
+
+    process.exit();
+    return res.sendStatus(OK_CODE);
+});
+
+function sendPingdomMessage(instance, pingdomData) {
     let formatData = {
             name: pingdomData.check_name,
             state: pingdomData.current_state,
@@ -56,10 +76,10 @@ function sendPingdomMessage(pingdomData) {
             hostname: pingdomData.check_params.hostname
     };
 
-    let template = getRandomArrayItem(getChatTemplatesFromState(pingdomData.current_state));
+    let template = getRandomArrayItem(getChatTemplatesFromState(instance, pingdomData.current_state));
     let chatMessage = format(template, formatData);
 
-    sendToGoogleChat(chatMessage,
+    sendToGoogleChat(instance, chatMessage,
         function (error, response, body) {
             if (!error && response.statusCode == OK_CODE) {
                 console.log(body);
@@ -68,23 +88,28 @@ function sendPingdomMessage(pingdomData) {
     );
 }
 
-function getChatTemplatesFromState(state) {
+function getChatTemplatesFromState(instance, state) {
     if (state == "UP") {
-        return config.messages.up;
+        return instance.messages.up;
     } else {
-        return config.messages.down;
+        return instance.messages.down;
     }
 }
 
-function sendToGoogleChat(text, callback) {
+function sendToGoogleChat(instance, text, callback) {
     if (text != null && text != "") {
-        request.post(config.googleChatUrl, {json: {text: text}}, callback);
+        request.post(instance.googleChatUrl, {json: {text: text}}, callback);
     }
 }
 
-function authorize(token) {
+function authorize(id, token) {
+    let instance = instances[id];
+
     // check if verification token is correct
-    return token == config.token;
+    if (instance && token == instance.token) {
+        return instance;
+    }
+    return null;
 }
 
 function getRandomArrayItem(array) {
@@ -92,9 +117,15 @@ function getRandomArrayItem(array) {
 }
 
 function onShutdown() {
-    sendToGoogleChat(getRandomArrayItem(config.messages.botShutdown), function () {
-        process.exit();
-    });
+    var waiting = Object.keys(instances).length;
+    for (var key in instances) {
+        let instance = instances[key];
+        sendToGoogleChat(instance, getRandomArrayItem(instance.messages.botShutdown), function () {
+            if (--waiting <= 0) {
+                process.exit();
+            }
+        });
+    }
 };
 
 // listen for TERM signal .e.g. kill

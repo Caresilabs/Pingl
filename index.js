@@ -24,6 +24,21 @@ let instances = {};
     for (var i = 0, len = config.instances.length; i < len; i++) {
         let instance = JSON.parse(fs.readFileSync(config.instances[i]));
         instances[instance.instanceId] = instance;
+        instance.queue = {};
+
+        // init thresholds
+        var defaultThreshold = 5;
+        instance.thresholdsData = new Array(24);
+        instance.thresholdsData.fill(defaultThreshold);
+        if (instance.thresholds != null) {
+            for (var t = 0; t < instance.thresholds.length; t++) {
+                var threshold = instance.thresholds[t];
+                for (var interval = threshold.fromHour; interval != threshold.toHour; interval = (interval + 1) % 24) {
+                    instance.thresholdsData[interval] = threshold.thresholdMinutes;
+                }
+            }
+        }
+
         console.log('[Pingl] installed: ' + instance.instanceId);
     }
 })();
@@ -42,10 +57,27 @@ app.post('/pingl', (req, res) => {
         return res.sendStatus(UNAUTHORIZED_CODE);
     }
 
-    sendPingdomMessage(instance, req.body);
+    var queuedMessage = instance.queue[req.body.check_id];
+    var currentStatus = req.body.current_state;
+    if (queuedMessage == null && currentStatus == "DOWN") {
+        instance.queue[req.body.check_id] = { message: req.body }
+        var thresholdTime = instance.thresholdsData[new Date().getHours()] * 1000 * 60;
+        setTimeout(updateMessage, thresholdTime, instance.instanceId, req.body.check_id)
+    } else if (currentStatus == "UP") {
+        instance.queue[req.body.check_id] = null;
+    }
 
     return res.sendStatus(OK_CODE);
 });
+
+function updateMessage(instanceId, checkId) {
+    var instance = instances[instanceId];
+    var queuedMessage = instance.queue[checkId];
+    if (queuedMessage != null) {
+        sendPingdomMessage(instance, queuedMessage.message);
+        instance.queue[checkId] = null;
+    }
+}
 
 app.post('/echo', (req, res) => {
     let instance = authorize(req.query.instanceId, req.query.token);

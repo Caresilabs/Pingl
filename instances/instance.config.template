@@ -5,6 +5,18 @@
 
 	"googleChatUrl": "https://",
 
+	"thresholds" : [
+		{
+			"fromHour" : 6,
+			"toHour" : 18,
+			"thresholdMinutes" : 5
+		},
+		{
+			"fromHour" : 18,
+			"toHour" : 6,
+			"thresholdMinutes" : 60
+		}
+	],
 	"messages": {
 
 		"up" : [

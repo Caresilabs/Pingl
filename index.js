@@ -33,7 +33,8 @@ let instances = {};
         if (instance.thresholds != null) {
             for (var t = 0; t < instance.thresholds.length; t++) {
                 var threshold = instance.thresholds[t];
-                for (var interval = threshold.fromHour; interval != threshold.toHour; interval = (interval + 1) % 24) {
+                var toHour = Math.min(threshold.toHour, 23);
+                for (var interval = threshold.fromHour; interval != toHour; interval = (interval + 1) % 24) {
                     instance.thresholdsData[interval] = threshold.thresholdMinutes;
                 }
             }

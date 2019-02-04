@@ -63,9 +63,11 @@ app.post('/pingl', (req, res) => {
     if (queuedMessage == null && currentStatus == "DOWN") {
         instance.queue[req.body.check_id] = { message: req.body }
         var thresholdTime = instance.thresholdsData[new Date().getHours()] * 1000 * 60;
-        setTimeout(updateMessage, thresholdTime, instance.instanceId, req.body.check_id)
+        setTimeout(updateMessage, thresholdTime, instance.instanceId, req.body.check_id);
+        console.log('[Pingl] ' + req.body.check_name + ' is down, but queued for ' + thresholdTime + ' ms');
     } else if (currentStatus == "UP") {
         instance.queue[req.body.check_id] = null;
+        console.log('[Pingl] ' + req.body.check_name + ' is up and removed from the queue');
     }
 
     return res.sendStatus(OK_CODE);
